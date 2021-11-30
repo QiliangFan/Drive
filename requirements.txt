@@ -1,0 +1,8 @@
+opencv-python
+tqdm
+pyyaml
+imageio
+imagecodecs
+torch 
+torchvision 
+pytorch_lightning
