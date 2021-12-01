@@ -8,8 +8,10 @@ from torch.utils.data import Dataset
 
 class TestItem(Dataset):
 
-    def __init__(self, test_root: str):
+    def __init__(self, test_root: str, transform):
+        super().__init__()
         assert os.path.exists(test_root), test_root
+        self.transform = transform
         images = glob(os.path.join(test_root, "images"))
         masks = glob(os.path.join(test_root, "mask"))
 
@@ -24,6 +26,7 @@ class TestItem(Dataset):
         mask = imageio.imread(mask)
         img, mask = torch.as_tensor(img, dtype=torch.float32), \
             torch.as_tensor(mask, dtype=torch.float32)
+        img, mask = self.transform(img), self.transform(mask)
         return img, mask
 
     def __len__(self):
@@ -32,8 +35,10 @@ class TestItem(Dataset):
 
 class TrainItem(Dataset):
 
-    def __init__(self, train_root: str):
+    def __init__(self, train_root: str, transform):
+        super().__init__()
         assert os.path.exists(train_root), train_root
+        self.transform = transform
         images = glob(os.path.join(train_root, "images", "*"))
         masks = glob(os.path.join(train_root, "mask", "*"))
         labels = glob(os.path.join(train_root, "1st_manual", "*"))
@@ -56,6 +61,7 @@ class TrainItem(Dataset):
         img, mask, label = torch.as_tensor(img, dtype=torch.float32), \
             torch.as_tensor(mask, dtype=torch.float32), \
             torch.as_tensor(label, dtype=torch.float32)
+        img, mask, label = self.transform(img), self.transform(mask), self.transform(label)
         return img, mask, label
 
     def __len__(self):
@@ -67,14 +73,14 @@ class DriveData:
     """
     load the datasets
     """
-    def __init__(self, data_root: str):
+    def __init__(self, data_root: str, transform):
         data_root = os.path.expanduser(data_root)  # ~ -> /home/username
         self.train_root = os.path.join(data_root, "training")
         self.test_root = os.path.join(data_root, "test")
 
 
-        self.train_data = TrainItem(train_root=self.train_root)
-        self.test_data = TestItem(test_root=self.test_root)
+        self.train_data = TrainItem(train_root=self.train_root, transform)
+        self.test_data = TestItem(test_root=self.test_root, transform)
 
     def get_train(self):
         return self.train_data

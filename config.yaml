@@ -1,3 +1,6 @@
 data:
   root: ~/data/drive  # contains tran&test
   output: results
+  size:
+    - 565
+    - 584

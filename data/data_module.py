@@ -3,16 +3,23 @@ from torch.utils.data.dataloader import DataLoader
 from .utils import DriveData
 from torch.utils.data import random_split
 from typing import Optional
+from torchvision import transforms
 
 class DriveDataModule(LightningDataModule):
 
     def __init__(self, data_root: str, mode="fold-validation"):
         assert mode in ["fold-validation", "inference"]
+        self.mode = mode
 
-        drive_data = DriveData(data_root)
+        transform = transforms.Compose([
+            transforms.Resize((512, 512))
+        ])
+
+        drive_data = DriveData(data_root, transform)
         
         train_data = drive_data.get_train()
         test_data = drive_data.get_test()
+
 
         if mode == "fold-validation":
             train_len = len(train_data)
