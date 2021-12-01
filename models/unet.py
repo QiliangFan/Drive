@@ -1,7 +1,7 @@
 from typing import ForwardRef, List
 import torch
 from torch import nn
-from .block import ConvBlock
+from .block import ConvBlock, BasicBlock
 
 
 class DownLayer(nn.Module):
@@ -9,26 +9,33 @@ class DownLayer(nn.Module):
     def __init__(self, in_channel: int):
         super().__init__()
 
+        block = BasicBlock
+
         layers = []
-        self.num_block = 5
+        self.num_block = 6
 
         cur_channel = in_channel
-        next_channel = in_channel * 16
+        next_channel = 8
         layers.append(nn.Sequential(
-            ConvBlock(cur_channel, next_channel),
-            ConvBlock(next_channel, next_channel),
+            block(cur_channel, next_channel),
+            block(next_channel, next_channel),
         ))
         cur_channel = next_channel
         next_channel = next_channel * 4
 
-        for i in range(self.num_block-1):
+        for i in range(self.num_block-2):
             layers.append(nn.Sequential(
                 nn.AvgPool2d(kernel_size=(2, 2), stride=2),
-                ConvBlock(cur_channel, next_channel),
-                ConvBlock(next_channel, next_channel),
+                block(cur_channel, next_channel),
+                block(next_channel, next_channel),
             ))
             cur_channel = next_channel
             next_channel = next_channel * 4
+        layers.append(nn.Sequential(
+            nn.AvgPool2d(kernel_size=(2, 2), stride=2),
+            block(cur_channel, cur_channel),
+            block(cur_channel, cur_channel),
+        ))
         self.layers = nn.ModuleList(layers)
         self.out_channel = cur_channel
 
@@ -55,7 +62,7 @@ class UpLayer(nn.Module):
         for _ in range(num_block-1):
             blocks.append(nn.Sequential(
                 ConvBlock(cur_channel, next_channel),
-                ConvBlock(cur_channel, next_channel)
+                ConvBlock(next_channel, next_channel)
             ))
             cur_channel = 2 * next_channel
             next_channel = next_channel // 4

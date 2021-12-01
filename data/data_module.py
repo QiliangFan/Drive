@@ -12,7 +12,7 @@ class DriveDataModule(LightningDataModule):
         self.mode = mode
 
         transform = transforms.Compose([
-            transforms.Resize((512, 512))
+            transforms.Resize([512, 512])
         ])
 
         drive_data = DriveData(data_root, transform)
@@ -25,8 +25,8 @@ class DriveDataModule(LightningDataModule):
             train_len = len(train_data)
             train_data, test_data = random_split(train_data, [train_len - train_len // 10, train_len // 10])
 
-        self.train_data = DataLoader(train_data, batch_size=9, pin_memory=True)
-        self.test_data = DataLoader(test_data, batch_size=1, pin_memory=True)
+        self.train_data = DataLoader(train_data, batch_size=1, pin_memory=True, num_workers=4)
+        self.test_data = DataLoader(test_data, batch_size=1, pin_memory=True, num_workers=4)
 
     def setup(self, stage: Optional[str] = None) -> None:
         print(f"stage: {stage}")

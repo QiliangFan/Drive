@@ -22,10 +22,13 @@ class TestItem(Dataset):
     def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         img = self.images[idx]
         mask = self.masks[idx]
-        img = imageio.imread(img)
+        img = imageio.imread(img)[:, :, 1]
         mask = imageio.imread(mask)
-        img, mask = torch.as_tensor(img, dtype=torch.float32), \
-            torch.as_tensor(mask, dtype=torch.float32)
+        img, mask = torch.as_tensor(img, dtype=torch.float32).unsqueeze(dim=0), \
+            torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0)
+        img, mask = (img - img.min()) / (img.max() - img.min()), \
+            (mask - mask.min()) / (mask.max() - mask.min())
+        mask = (mask > 0.5).type(torch.float32)
         img, mask = self.transform(img), self.transform(mask)
         return img, mask
 
@@ -55,12 +58,16 @@ class TrainItem(Dataset):
         img = self.images[idx]
         mask = self.masks[idx]
         label = self.labels[idx]
-        img = imageio.imread(img)
+        img = imageio.imread(img)[:, :, 1]
         mask = imageio.imread(mask)
         label = imageio.imread(label)
-        img, mask, label = torch.as_tensor(img, dtype=torch.float32), \
-            torch.as_tensor(mask, dtype=torch.float32), \
-            torch.as_tensor(label, dtype=torch.float32)
+        img, mask, label = torch.as_tensor(img, dtype=torch.float32).unsqueeze(dim=0), \
+            torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0), \
+            torch.as_tensor(label, dtype=torch.float32).unsqueeze(dim=0)
+        img, mask, label = (img - img.min()) / (img.max() - img.min()), \
+            (mask - mask.min()) / (mask.max() - mask.min()), \
+            (label - label.min()) / (label.max() - label.min())
+        mask = (mask > 0.5).type(torch.float32)
         img, mask, label = self.transform(img), self.transform(mask), self.transform(label)
         return img, mask, label
 
@@ -79,8 +86,8 @@ class DriveData:
         self.test_root = os.path.join(data_root, "test")
 
 
-        self.train_data = TrainItem(train_root=self.train_root, transform)
-        self.test_data = TestItem(test_root=self.test_root, transform)
+        self.train_data = TrainItem(train_root=self.train_root, transform=transform)
+        self.test_data = TestItem(test_root=self.test_root, transform=transform)
 
     def get_train(self):
         return self.train_data

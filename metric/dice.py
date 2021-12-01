@@ -14,7 +14,7 @@ class Dice:
         inter = output * target
         union = torch.pow(output, 2).sum() + torch.pow(target, 2).sum()
 
-        return (inter / (union + 1e-6)).mean()
+        return (2 * inter / (union + 1e-6)).mean()
 
 class DiceLoss(nn.Module):
 
