@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import imageio
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 class TestItem(Dataset):
 
@@ -22,9 +23,10 @@ class TestItem(Dataset):
     def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         img = self.images[idx]
         mask = self.masks[idx]
-        img = imageio.imread(img)[:, :, 1]
+        img = imageio.imread(img)
+        img = np.einsum("hwc->chw", img)
         mask = imageio.imread(mask)
-        img, mask = torch.as_tensor(img, dtype=torch.float32).unsqueeze(dim=0), \
+        img, mask = torch.as_tensor(img, dtype=torch.float32), \
             torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0)
         img, mask = (img - img.min()) / (img.max() - img.min()), \
             (mask - mask.min()) / (mask.max() - mask.min())
@@ -58,10 +60,11 @@ class TrainItem(Dataset):
         img = self.images[idx]
         mask = self.masks[idx]
         label = self.labels[idx]
-        img = imageio.imread(img)[:, :, 1]
+        img = imageio.imread(img)
+        img = np.einsum("hwc->chw", img)
         mask = imageio.imread(mask)
         label = imageio.imread(label)
-        img, mask, label = torch.as_tensor(img, dtype=torch.float32).unsqueeze(dim=0), \
+        img, mask, label = torch.as_tensor(img, dtype=torch.float32), \
             torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0), \
             torch.as_tensor(label, dtype=torch.float32).unsqueeze(dim=0)
         img, mask, label = (img - img.min()) / (img.max() - img.min()), \
@@ -80,14 +83,23 @@ class DriveData:
     """
     load the datasets
     """
-    def __init__(self, data_root: str, transform):
+    def __init__(self, data_root: str):
         data_root = os.path.expanduser(data_root)  # ~ -> /home/username
         self.train_root = os.path.join(data_root, "training")
         self.test_root = os.path.join(data_root, "test")
 
+        train_transform = transforms.Compose([
+            transforms.Resize([512, 512]),
+            transforms.Normalize(0, 0.1)
+        ])
 
-        self.train_data = TrainItem(train_root=self.train_root, transform=transform)
-        self.test_data = TestItem(test_root=self.test_root, transform=transform)
+        test_transform = transforms.Compose([
+            transforms.Resize([512, 512]),
+            transforms.Normalize(0, 0.1)
+        ])
+
+        self.train_data = TrainItem(train_root=self.train_root, transform=train_transform)
+        self.test_data = TestItem(test_root=self.test_root, transform=test_transform)
 
     def get_train(self):
         return self.train_data

@@ -9,10 +9,10 @@ from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
 
 def main():
     data_module = DriveDataModule(config["data"]["root"])
-    net = Net(config["data"]["output"], visdom=True)
+    net = Net(config["data"]["output"], visdom=False)
 
     trainer = Trainer(
-        gpus=0, 
+        gpus=1, 
         logger=CSVLogger(save_dir="logs", name="drive"),
         callbacks=[ModelCheckpoint(dirpath="ckpt", save_weights_only=True), ModelSummary(max_depth=4)],
         max_epochs=210,

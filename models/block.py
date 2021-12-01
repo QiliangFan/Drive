@@ -10,8 +10,8 @@ class ConvBlock(nn.Module):
         super().__init__()
 
         self.conv = nn.Conv2d(in_channel, out_channel, kernel_size, stride, padding)
-        # self.norm = GroupNorm(8 if out_channel % 8 == 0 else out_channel, out_channel)
-        self.norm = nn.InstanceNorm2d(out_channel)
+        self.norm = GroupNorm(8 if out_channel % 8 == 0 else out_channel, out_channel)
+        # self.norm = nn.InstanceNorm2d(out_channel)
         self.act = ELU(inplace=True)
 
     def forward(self, x):
@@ -22,13 +22,15 @@ class BasicBlock(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size=3, stride=1, padding=1):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride, padding=padding)
+        self.conv1 = nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
         self.relu1 = ELU(inplace=True)
-        self.norm1 = nn.InstanceNorm2d(out_channel)
+        self.norm1 = GroupNorm(8 if out_channel % 8 == 0 else out_channel, out_channel)
+        # self.norm1 = nn.InstanceNorm2d(out_channel)
 
-        self.conv2 = nn.Conv2d(out_channel, out_channel, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(out_channel, out_channel, kernel_size=3, stride=1, padding=1, bias=False)
         self.relu2 = ELU(inplace=True)
-        self.norm2 = nn.InstanceNorm2d(out_channel)
+        self.norm2 = GroupNorm(8 if out_channel % 8 == 0 else out_channel, out_channel)
+        # self.norm2 = nn.InstanceNorm2d(out_channel)
 
         if stride == 2 and in_channel == out_channel:
             self.skip = nn.AvgPool2d(2, 2)

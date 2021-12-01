@@ -5,6 +5,7 @@ from torch import optim
 import torch
 from visdom import Visdom
 from .unet import UNet
+from torch import nn 
 from metric.dice import Dice, DiceLoss
 from metric.clDice import soft_dice_cldice
 import imageio
@@ -22,10 +23,12 @@ class Net(LightningModule):
         if self.save_path is not None and not os.path.exists(self.save_path):
             os.makedirs(self.save_path, exist_ok=True)
 
-        self.seg_net = UNet(1)
+        self.seg_net_1 = UNet(3)
 
         self.dice_loss = DiceLoss()
         self.clDice_loss = soft_dice_cldice(alpha=0.5, iter_=3)
+        self.ce_loss = nn.BCEWithLogitsLoss()
+
         self.dice = Dice()
 
     def configure_optimizers(self):
@@ -38,7 +41,7 @@ class Net(LightningModule):
         } 
 
     def forward(self, x):
-        return self.seg_net(x)
+        return self.seg_net_1(x)
 
     def training_step(self, batch, batch_idx):
         return self.step(batch, batch_idx)
@@ -63,8 +66,11 @@ class Net(LightningModule):
 
 
             self.save_output(out, batch_idx)
-            # loss = self.dice_loss(out, label)
-            loss = self.clDice_loss(out, label)
+
+            loss = self.dice_loss(out, label)
+            # loss = self.clDice_loss(out, label)
+            # loss = self.ce_loss(out, label)
+
             dice = self.dice(out, label)
             self.log_dict({
                 f"{'train' if self.training else 'val'}_dice": dice

@@ -8,13 +8,11 @@ class Dice:
         pass
 
     def __call__(self, output: torch.Tensor, target: torch.Tensor):
-        output = output.flatten()
-        target = target.flatten()
-
-        inter = output * target
-        union = torch.pow(output, 2).sum() + torch.pow(target, 2).sum()
-
-        return (2 * inter / (union + 1e-6)).mean()
+        output = output.flatten(start_dim=1)
+        target = target.flatten(start_dim=1)
+        inter = torch.sum(output * target, dim=1)
+        union = torch.sum(output * output, dim=1) + torch.sum(target * target, dim=1)
+        return (2 * inter / union.clamp(1e-6)).mean(dim=0)
 
 class DiceLoss(nn.Module):
 

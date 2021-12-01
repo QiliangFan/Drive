@@ -11,11 +11,7 @@ class DriveDataModule(LightningDataModule):
         assert mode in ["fold-validation", "inference"]
         self.mode = mode
 
-        transform = transforms.Compose([
-            transforms.Resize([512, 512])
-        ])
-
-        drive_data = DriveData(data_root, transform)
+        drive_data = DriveData(data_root)
         
         train_data = drive_data.get_train()
         test_data = drive_data.get_test()
@@ -37,8 +33,8 @@ class DriveDataModule(LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         return self.train_data
 
-    def val_dataloader(self) -> DataLoader:
-        return self.test_data
+    # def val_dataloader(self) -> DataLoader:
+    #     return self.test_data
 
     def test_dataloader(self) -> DataLoader:
         return self.test_data
