@@ -4,11 +4,14 @@ from pytorch_lightning import LightningModule
 from torch import optim
 import torch
 from visdom import Visdom
+
+from models.vnet import VNet
 from .unet import UNet
 from torch import nn 
 from metric.dice import Dice, DiceLoss
 from metric.clDice import soft_dice_cldice
 import imageio
+from .resnetx import ResNextBlock
 
 class Net(LightningModule):
 
@@ -23,7 +26,8 @@ class Net(LightningModule):
         if self.save_path is not None and not os.path.exists(self.save_path):
             os.makedirs(self.save_path, exist_ok=True)
 
-        self.seg_net_1 = UNet(3)
+        # self.seg_net = UNet(3)
+        self.seg_net = VNet(ResNextBlock)
 
         self.dice_loss = DiceLoss()
         self.clDice_loss = soft_dice_cldice(alpha=0.5, iter_=3)
@@ -41,7 +45,7 @@ class Net(LightningModule):
         } 
 
     def forward(self, x):
-        return self.seg_net_1(x)
+        return self.seg_net(x)
 
     def training_step(self, batch, batch_idx):
         return self.step(batch, batch_idx)
@@ -68,8 +72,8 @@ class Net(LightningModule):
             self.save_output(out, batch_idx)
 
             loss = self.dice_loss(out, label)
-            # loss = self.clDice_loss(out, label)
-            # loss = self.ce_loss(out, label)
+            # loss = self.clDice_loss(out, label)  # 比 ce 还差
+            # loss = self.ce_loss(out, label)   # 很差
 
             dice = self.dice(out, label)
             self.log_dict({

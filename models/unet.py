@@ -2,20 +2,21 @@ from typing import ForwardRef, List
 import torch
 from torch import nn
 from .block import ConvBlock, BasicBlock
-
+from .resnetx import ResNextBlock
 
 class DownLayer(nn.Module):
     
     def __init__(self, in_channel: int):
         super().__init__()
 
-        block = BasicBlock
+        # block = BasicBlock
+        block = ResNextBlock
 
         layers = []
         self.num_block = 6
 
         cur_channel = in_channel
-        next_channel = 8
+        next_channel = 4
         layers.append(nn.Sequential(
             block(cur_channel, next_channel),
             block(next_channel, next_channel),
