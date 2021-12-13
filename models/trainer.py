@@ -33,12 +33,31 @@ class Net(LightningModule):
         self.clDice_loss = soft_dice_cldice(alpha=0.5, iter_=3)
         self.ce_loss = nn.BCEWithLogitsLoss()
 
+        self.lr = 1e-3
+
         self.dice = Dice()
 
+    def optimizer_step(
+        self,
+        epoch,
+        batch_idx,
+        optimizer,
+        optimizer_idx,
+        optimizer_closure,
+        on_tpu=False,
+        using_native_amp=False,
+        using_lbfgs=False
+    ):
+        if self.trainer.global_step < 500:
+            lr_scale = min(1.0, float(self.trainer.global_step + 1) / 500)
+            for pg in optimizer.param_groups:
+                pg["lr"] = lr_scale * self.lr
+        optimizer.step(closure=optimizer_closure)
+
     def configure_optimizers(self):
-        opt = optim.Adam(self.parameters(), lr=1e-3, weight_decay=1e-6)
-        # sgdr = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, 4, 2, 210)
-        sgdr = optim.lr_scheduler.CosineAnnealingLR(opt, 10)
+        opt = optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-6)
+        sgdr = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, 4, 2)
+        # sgdr = optim.lr_scheduler.CosineAnnealingLR(opt, 10)
         return {
             "optimizer": opt,
             "lr_scheduler": sgdr 

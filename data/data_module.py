@@ -33,8 +33,8 @@ class DriveDataModule(LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         return self.train_data
 
-    # def val_dataloader(self) -> DataLoader:
-    #     return self.test_data
+    def val_dataloader(self) -> DataLoader:
+        return self.test_data
 
     def test_dataloader(self) -> DataLoader:
         return self.test_data

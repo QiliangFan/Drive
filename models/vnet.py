@@ -66,8 +66,7 @@ class LastBlock(nn.Module):
 
         self.conv1 = conv_block(in_channel, in_channel, kernel_size=3, stride=1, padding=1, inplace=True)
         self.conv2 = conv_block(in_channel, in_channel, kernel_size=3, stride=1, padding=1, inplace=True)
-        # self.act = nn.Sigmoid()
-        self.act = nn.Tanh()
+        self.act = nn.Sigmoid()
         # self.skip = nn.Conv2d(in_channel, 1, kernel_size=1,
         #                       stride=1, padding=0, groups=groups2(in_channel, 1))
 
@@ -79,8 +78,7 @@ class LastBlock(nn.Module):
         x = self.conv2(x)
         # x = torch.add(x, res)
         x = self.last(x)
-        # x = self.act(x)
-        x = (self.act(x) + 1) / 2
+        x = self.act(x)
         return x
 
 
@@ -152,14 +150,16 @@ class UpLayer(nn.Module):
         cur_channel = in_channel
         next_channel = in_channel // expand
 
-        self.up_sample = nn.Upsample(scale_factor=2)
-
         blocks = []
+        up_samples = []
         for i in range(num_pooling - 1):
+            up_samples.append(nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=3, stride=2, padding=1, output_padding=1))   
             blocks.append(UpBlock(cur_channel * 2, next_channel, conv_block))
             cur_channel, next_channel = next_channel, next_channel // expand
+        up_samples.append(nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=3, stride=2, padding=1, output_padding=1))
         blocks.append(LastBlock(cur_channel * 2, conv_block))
         self.blocks = nn.ModuleList(blocks)
+        self.up_samples = nn.ModuleList(up_samples)
 
     def forward(self, inputs: List[torch.Tensor]):
         assert self.num_pooling > 0, self.num_pooling
@@ -168,7 +168,7 @@ class UpLayer(nn.Module):
             if i == 0:
                 last = inputs[i]
             else:
-                last = self.blocks[i -1](torch.cat([self.up_sample(last), inputs[i]], dim=1))
+                last = self.blocks[i -1](torch.cat([self.up_samples[i - 1](last), inputs[i]], dim=1))
         return last
 
 

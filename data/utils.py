@@ -32,6 +32,7 @@ class TestItem(Dataset):
             (mask - mask.min()) / (mask.max() - mask.min())
         mask = (mask > 0.5).type(torch.float32)
         img, mask = self.transform(img), self.transform(mask)
+        img = (img - img.min()) / (img.max() - img.min())
         return img, mask
 
     def __len__(self):
@@ -72,6 +73,7 @@ class TrainItem(Dataset):
             (label - label.min()) / (label.max() - label.min())
         mask = (mask > 0.5).type(torch.float32)
         img, mask, label = self.transform(img), self.transform(mask), self.transform(label)
+        img = (img - img.min()) / (img.max() - img.min())
         return img, mask, label
 
     def __len__(self):
@@ -90,12 +92,10 @@ class DriveData:
 
         train_transform = transforms.Compose([
             transforms.Resize([512, 512]),
-            transforms.Normalize(0, 0.1)
         ])
 
         test_transform = transforms.Compose([
             transforms.Resize([512, 512]),
-            transforms.Normalize(0, 0.1)
         ])
 
         self.train_data = TrainItem(train_root=self.train_root, transform=train_transform)

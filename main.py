@@ -20,8 +20,8 @@ def main():
         deterministic=True,
         max_epochs=210,
         gradient_clip_val=0.1,
-        val_check_interval=10,
-        log_every_n_steps=1,
+        check_val_every_n_epoch=10,
+        # log_every_n_steps=1,
         # deterministic=True
     )
 
