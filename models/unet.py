@@ -9,8 +9,9 @@ class DownLayer(nn.Module):
     def __init__(self, in_channel: int):
         super().__init__()
 
+        block = ConvBlock
         # block = BasicBlock
-        block = ResNextBlock
+        # block = ResNextBlock
 
         layers = []
         self.num_block = 424

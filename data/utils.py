@@ -32,7 +32,7 @@ class TestItem(Dataset):
         img = imageio.imread(img)
         img = np.einsum("hwc->chw", img)
         mask = imageio.imread(mask)
-        label = imageio.imread(label)
+        label = imageio.imread(label)[:, :, 0]
         img, mask, label = torch.as_tensor(img, dtype=torch.float32), \
             torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0), \
             torch.as_tensor(label, dtype=torch.float32).unsqueeze(dim=0)
@@ -43,7 +43,8 @@ class TestItem(Dataset):
         img, mask, label = self.transform(img), self.transform(mask), self.transform(label)
         img = (img - img.min()) / (img.max() - img.min())
         return img, mask, label
-
+    def __len__(self):
+        return len(self.images)
 
 class TrainItem(Dataset):
 

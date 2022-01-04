@@ -71,6 +71,7 @@ class LastBlock(nn.Module):
 
         self.conv1 = conv_block(in_channel, in_channel, kernel_size=3, stride=1, padding=1, inplace=True)
         self.conv2 = conv_block(in_channel, in_channel, kernel_size=3, stride=1, padding=1, inplace=True)
+        self.conv3 = conv_block(in_channel, in_channel, kernel_size=3, stride=1, padding=1, inplace=True)
         self.act = nn.Sigmoid()
         # self.skip = nn.Conv2d(in_channel, 1, kernel_size=1,
         #                       stride=1, padding=0, groups=groups2(in_channel, 1))
@@ -81,6 +82,7 @@ class LastBlock(nn.Module):
         # res = self.skip(x)
         x = self.conv1(x)
         x = self.conv2(x)
+        x = self.conv3(x)
         # x = torch.add(x, res)
         x = self.last(x)
         x = self.act(x)

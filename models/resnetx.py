@@ -41,9 +41,9 @@ class ResNextBlock(nn.Module):
                 conv_block(in_channel, mid_channel, kernel_size=kernel_style[i], stride=1, padding=padding_style[i], inplace=inplace),
                 conv_block(mid_channel, mid_channel, kernel_size=3, stride=1, padding=1, inplace=inplace),
                 conv_block(mid_channel, out_channel, kernel_size=kernel_style[i], stride=1, padding=padding_style[i], inplace=inplace),
-                conv_block(out_channel, mid_channel, kernel_size=1, stride=1, padding=0, inplace=inplace),
-                conv_block(mid_channel, mid_channel, kernel_size=3, stride=1, padding=1, inplace=inplace),
-                conv_block(mid_channel, out_channel, kernel_size=1, stride=1, padding=0, inplace=inplace)
+                # conv_block(out_channel, mid_channel, kernel_size=1, stride=1, padding=0, inplace=inplace),
+                # conv_block(mid_channel, mid_channel, kernel_size=3, stride=1, padding=1, inplace=inplace),
+                # conv_block(mid_channel, out_channel, kernel_size=1, stride=1, padding=0, inplace=inplace)
             ))
         self.scale = conv_block(out_channel * split_num, out_channel, kernel_size=1, stride=1, padding=0, inplace=inplace)
         self.blocks = nn.ModuleList(blocks)
