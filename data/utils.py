@@ -13,30 +13,36 @@ class TestItem(Dataset):
         super().__init__()
         assert os.path.exists(test_root), test_root
         self.transform = transform
-        images = glob(os.path.join(test_root, "images"))
-        masks = glob(os.path.join(test_root, "mask"))
+        images = glob(os.path.join(test_root, "images", "*"))
+        masks = glob(os.path.join(test_root, "mask", "*"))
+        labels = glob(os.path.join(test_root, "2nd_manual", "*"))
+        images.sort(key=lambda x: int(os.path.basename(x)[:2]))
+        masks.sort(key=lambda x: int(os.path.basename(x)[:2]))
+        labels.sort(key=lambda x: int(os.path.basename(x)[:2]))
 
-        assert len(images) == len(masks)
+        assert len(images) == len(masks) == len(labels)
         self.images = images
         self.masks = masks
+        self.labels = labels
 
-    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         img = self.images[idx]
         mask = self.masks[idx]
+        label = self.labels[idx]
         img = imageio.imread(img)
         img = np.einsum("hwc->chw", img)
         mask = imageio.imread(mask)
-        img, mask = torch.as_tensor(img, dtype=torch.float32), \
-            torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0)
-        img, mask = (img - img.min()) / (img.max() - img.min()), \
-            (mask - mask.min()) / (mask.max() - mask.min())
+        label = imageio.imread(label)
+        img, mask, label = torch.as_tensor(img, dtype=torch.float32), \
+            torch.as_tensor(mask, dtype=torch.float32).unsqueeze(dim=0), \
+            torch.as_tensor(label, dtype=torch.float32).unsqueeze(dim=0)
+        img, mask, label = (img - img.min()) / (img.max() - img.min()), \
+            (mask - mask.min()) / (mask.max() - mask.min()), \
+            (label - label.min()) / (label.max() - label.min())
         mask = (mask > 0.5).type(torch.float32)
-        img, mask = self.transform(img), self.transform(mask)
+        img, mask, label = self.transform(img), self.transform(mask), self.transform(label)
         img = (img - img.min()) / (img.max() - img.min())
-        return img, mask
-
-    def __len__(self):
-        return len(self.images)
+        return img, mask, label
 
 
 class TrainItem(Dataset):
