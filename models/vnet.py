@@ -2,6 +2,7 @@ from typing import List, Optional
 from matplotlib.pyplot import scatter
 import torch
 from torch import nn
+from torch.nn.modules.instancenorm import InstanceNorm2d
 
 
 class FirstBlock(nn.Module):
@@ -35,7 +36,11 @@ class DownBlock(nn.Module):
     def __init__(self, in_channel: int, out_channel: int, conv_block):
         super().__init__()
 
-        self.down_sample = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.down_sample = nn.Sequential(
+            nn.AvgPool2d(kernel_size=2, stride=2),
+            nn.InstanceNorm2d(in_channel, momentum=1, affine=True),
+            nn.ELU(inplace=True)
+        )
 
         self.conv1 = conv_block(in_channel, out_channel, kernel_size=3, stride=1, padding=1, inplace=True)
 
@@ -115,7 +120,7 @@ class DownLayer(nn.Module):
         self.num_pooling = num_pooling
 
         cur_channel = 3
-        next_channel = 4
+        next_channel = 16
         self.expand = 4
 
         blocks = []
@@ -153,10 +158,20 @@ class UpLayer(nn.Module):
         blocks = []
         up_samples = []
         for i in range(num_pooling - 1):
-            up_samples.append(nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=3, stride=2, padding=1, output_padding=1))   
+            # up_samples.append(nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=2, stride=2, padding=0, output_padding=0))
+            up_samples.append(nn.Sequential(
+                nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=2, stride=2, padding=0, output_padding=0),
+                nn.InstanceNorm2d(cur_channel, momentum=0.4, affine=True),
+                nn.ELU(inplace=True)
+            ))   
             blocks.append(UpBlock(cur_channel * 2, next_channel, conv_block))
             cur_channel, next_channel = next_channel, next_channel // expand
-        up_samples.append(nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=3, stride=2, padding=1, output_padding=1))
+        # up_samples.append(nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=2, stride=2, padding=0, output_padding=0))
+        up_samples.append(nn.Sequential(
+            nn.ConvTranspose2d(cur_channel, cur_channel, kernel_size=2, stride=2, padding=0, output_padding=0),
+            nn.InstanceNorm2d(cur_channel, affine=True, momentum=0.4),
+            nn.ELU(inplace=True)
+        ))
         blocks.append(LastBlock(cur_channel * 2, conv_block))
         self.blocks = nn.ModuleList(blocks)
         self.up_samples = nn.ModuleList(up_samples)
@@ -177,7 +192,7 @@ class VNet(nn.Module):
     def __init__(self, conv_block, num_pooling=4):
         super().__init__()
 
-        self.num_pooling = 4
+        self.num_pooling = 8
 
         self.down_layer = DownLayer(num_pooling, conv_block)
 

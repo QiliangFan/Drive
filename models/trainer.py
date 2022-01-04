@@ -30,8 +30,8 @@ class Net(LightningModule):
         self.seg_net = VNet(ResNextBlock)
 
         self.dice_loss = DiceLoss()
-        self.clDice_loss = soft_dice_cldice(alpha=0.5, iter_=3)
-        self.ce_loss = nn.BCEWithLogitsLoss()
+        # self.clDice_loss = soft_dice_cldice(alpha=0.5, iter_=3)
+        # self.ce_loss = nn.BCEWithLogitsLoss()
 
         self.lr = 1e-3
 
@@ -55,9 +55,9 @@ class Net(LightningModule):
         optimizer.step(closure=optimizer_closure)
 
     def configure_optimizers(self):
-        opt = optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-6)
-        sgdr = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, 4, 2)
-        # sgdr = optim.lr_scheduler.CosineAnnealingLR(opt, 10)
+        opt = optim.AdamW(self.parameters(), lr=self.lr, weight_decay=1e-8)
+        # sgdr = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, 4, 2)
+        sgdr = optim.lr_scheduler.CosineAnnealingLR(opt, 10)
         return {
             "optimizer": opt,
             "lr_scheduler": sgdr 
@@ -96,7 +96,8 @@ class Net(LightningModule):
 
             dice = self.dice(out, label)
             self.log_dict({
-                f"{'train' if self.training else 'val'}_dice": dice
+                f"{'train' if self.training else 'val'}_dice": dice,
+                # "lr": self.optimizers().state_dict()["param_groups"][0]['lr']
             }, prog_bar=True)
             return loss
         else:
@@ -112,6 +113,8 @@ class Net(LightningModule):
 
         for i, image in enumerate(out):
             image = cast(torch.Tensor, image)
-            image = image.squeeze().cpu().type(torch.uint8)
+            image = image.squeeze().cpu()
+            image = image * 255
+            image = image.type(torch.uint8)
             imageio.imsave(os.path.join(self.save_path, f"{batch_idx + i}.png"), image)
             

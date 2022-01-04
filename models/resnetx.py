@@ -20,7 +20,7 @@ class ResNextBlock(nn.Module):
     def __init__(self, in_channel, out_channel, split_num: int = 4, **kwargs):
         super().__init__()
 
-        mid_channel = 8
+        mid_channel = 4
 
         self.split_num = split_num
         blocks = []
