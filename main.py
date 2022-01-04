@@ -21,7 +21,7 @@ def main():
     trainer = Trainer(
         gpus=1, 
         logger=CSVLogger(save_dir="logs", name="drive"),
-        callbacks=[ModelCheckpoint(filename="dive", dirpath="ckpt", save_weights_only=True, monitor="val_dice", mode="max")],
+        callbacks=[ModelCheckpoint(filename="dive", dirpath="ckpt", save_weights_only=True)],
         benchmark=True,
         deterministic=True,
         max_epochs=100,

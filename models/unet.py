@@ -14,7 +14,7 @@ class DownLayer(nn.Module):
         # block = ResNextBlock
 
         layers = []
-        self.num_block = 424
+        self.num_block = 4
 
         cur_channel = in_channel
         next_channel = 4
